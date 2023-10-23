@@ -6,41 +6,86 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"strconv"
 
 	"github.com/gorilla/mux"
 )
 
 type Router struct {
-	router *mux.Router
-	port   string
-	host   string
+	Router *mux.Router
+	Port   string
+	Host   string
+	Db     *dbquery.DB
 }
 
 func NewRouter(host, port string) *Router {
 	return &Router{
-		router: mux.NewRouter(),
-		port:   port,
-		host:   host,
+		Router: mux.NewRouter(),
+		Port:   port,
+		Host:   host,
+		Db:     dbquery.NewDB(),
 	}
 }
 
 func (r *Router) StartRouter() {
-	r.router.HandleFunc("/hello", helloHandler())
-	r.router.HandleFunc("/db", dbHandler())
-	http.ListenAndServe(fmt.Sprintf("%s:%s", r.host, r.port), r.router)
+	r.Router.HandleFunc("/hello", r.helloHandler())
+	r.Router.HandleFunc("/db", r.dbHandler())
+	r.Router.HandleFunc("/add", r.addPlayerHandler())
+	r.Router.HandleFunc("/change", r.changePlayerHandler())
+	http.ListenAndServe(fmt.Sprintf("%s:%s", r.Host, r.Port), r.Router)
 	log.Default().Println("Server started")
 }
 
-func helloHandler() http.HandlerFunc {
+func (r *Router) helloHandler() http.HandlerFunc {
 	log.Default().Println("handling hello")
 	return func(w http.ResponseWriter, r *http.Request) {
 		io.WriteString(w, "hello")
 	}
 }
 
-func dbHandler() http.HandlerFunc {
-	a := dbquery.Wtf()
+func (ro *Router) dbHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		a := ro.Db.Wtf()
 		io.WriteString(w, a)
+	}
+}
+
+func (ro *Router) addPlayerHandler() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		s := r.Header.Get("size")
+		ken, err := strconv.Atoi(s)
+		if err != nil {
+			log.Default().Printf("f put request1 %+v\n", err)
+		}
+		b := make([]byte, ken)
+		_, err = r.Body.Read(b)
+		if err != nil && err != io.EOF {
+			log.Default().Printf("f put request %+v\n", err)
+		}
+
+		ro.Db.AddPlayer(b)
+		log.Default().Printf("ok put request %s\n", string(b))
+
+		io.WriteString(w, string(b))
+	}
+}
+
+func (ro *Router) changePlayerHandler() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		s := r.Header.Get("size")
+		ken, err := strconv.Atoi(s)
+		if err != nil {
+			log.Default().Printf("f put request1 %+v\n", err)
+		}
+		b := make([]byte, ken)
+		_, err = r.Body.Read(b)
+		if err != nil && err != io.EOF {
+			log.Default().Printf("f put request %+v\n", err)
+		}
+
+		ro.Db.ChangeRecordForPlayer(b)
+		log.Default().Printf("ok put request %s\n", string(b))
+
+		io.WriteString(w, string(b))
 	}
 }

@@ -8,12 +8,19 @@ import (
 	"fmt"
 	"hleb_flip/internal/config"
 	dbrequests "hleb_flip/internal/db_requests"
+	"log"
 	"os"
 
 	"github.com/jackc/pgx/v5"
 )
 
-func Wtf() string {
+type DB struct {
+	dbCfg    config.DBConfig
+	certPool *x509.CertPool
+	connCfg  *pgx.ConnConfig
+}
+
+func NewDB() *DB {
 	cfg := config.GetDBConfig()
 	rootCertPool := x509.NewCertPool()
 	pem, err := os.ReadFile(cfg.CrtPath)
@@ -40,18 +47,22 @@ func Wtf() string {
 		InsecureSkipVerify: true,
 	}
 
-	conn, err := pgx.ConnectConfig(context.Background(), connConfig)
+	return &DB{
+		dbCfg:   *cfg,
+		connCfg: connConfig,
+	}
+}
+
+func (db *DB) Wtf() string {
+	conn, err := pgx.ConnectConfig(context.Background(), db.connCfg)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Unable to connect to database: %v\n", err)
-		os.Exit(1)
 	}
-
 	defer conn.Close(context.Background())
 
 	rows, err := conn.Query(context.Background(), "SELECT * FROM records")
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "QueryRow failed: %v\n", err)
-		os.Exit(1)
 	}
 	defer rows.Close()
 
@@ -69,4 +80,46 @@ func Wtf() string {
 	}
 
 	return string(b)
+}
+
+func (db *DB) AddPlayer(data []byte) {
+	conn, err := pgx.ConnectConfig(context.Background(), db.connCfg)
+	if err != nil {
+		log.Default().Printf("Unable to connect to database: %v\n", err)
+	}
+	defer conn.Close(context.Background())
+
+	stru := dbrequests.AddRequest{}
+	err = json.Unmarshal(data, &stru)
+	if err != nil {
+		log.Default().Printf("Unable to unmarshall json: %v\n", err)
+	}
+	fmt.Println("adding player")
+	log.Default().Println("adding player")
+	log.Default().Printf("adding: %v\n", stru)
+	rows, err := conn.Query(context.Background(), fmt.Sprintf("INSERT INTO records (player, record) VALUES ('%s', 0)", stru.Player))
+	if err != nil {
+		log.Default().Printf("QueryRow failed: %v\n", err)
+	}
+	defer rows.Close()
+}
+
+func (db *DB) ChangeRecordForPlayer(data []byte) {
+	conn, err := pgx.ConnectConfig(context.Background(), db.connCfg)
+	if err != nil {
+		log.Default().Printf("Unable to connect to database: %v\n", err)
+	}
+	defer conn.Close(context.Background())
+
+	stru := dbrequests.ChangePlayerRequest{}
+	err = json.Unmarshal(data, &stru)
+	if err != nil {
+		log.Default().Printf("Unable to unmarshall json: %v\n", err)
+	}
+
+	rows, err := conn.Query(context.Background(), fmt.Sprintf("UPDATE records SET record = %d WHERE player = '%s'", stru.Val, stru.Player))
+	if err != nil {
+		log.Default().Printf("QueryRow failed: %v\n", err)
+	}
+	defer rows.Close()
 }
