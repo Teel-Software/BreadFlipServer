@@ -53,14 +53,14 @@ func NewDB() *DB {
 	}
 }
 
-func (db *DB) Wtf() string {
+func (db *DB) GetRecords() string {
 	conn, err := pgx.ConnectConfig(context.Background(), db.connCfg)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Unable to connect to database: %v\n", err)
 	}
 	defer conn.Close(context.Background())
 
-	rows, err := conn.Query(context.Background(), "SELECT * FROM records")
+	rows, err := conn.Query(context.Background(), "SELECT * FROM records ORDER BY record DESC LIMIT 10")
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "QueryRow failed: %v\n", err)
 	}
@@ -94,10 +94,9 @@ func (db *DB) AddPlayer(data []byte) {
 	if err != nil {
 		log.Default().Printf("Unable to unmarshall json: %v\n", err)
 	}
-	fmt.Println("adding player")
-	log.Default().Println("adding player")
+
 	log.Default().Printf("adding: %v\n", stru)
-	rows, err := conn.Query(context.Background(), fmt.Sprintf("INSERT INTO records (player, record) VALUES ('%s', 0)", stru.Player))
+	rows, err := conn.Query(context.Background(), fmt.Sprintf("INSERT INTO records (player, record) VALUES ('%s', 0)", stru.SanitizedPlayer()))
 	if err != nil {
 		log.Default().Printf("QueryRow failed: %v\n", err)
 	}
@@ -117,7 +116,7 @@ func (db *DB) ChangeRecordForPlayer(data []byte) {
 		log.Default().Printf("Unable to unmarshall json: %v\n", err)
 	}
 
-	rows, err := conn.Query(context.Background(), fmt.Sprintf("UPDATE records SET record = %d WHERE player = '%s'", stru.Val, stru.Player))
+	rows, err := conn.Query(context.Background(), fmt.Sprintf("UPDATE records SET record = %d WHERE player = '%s'", stru.Val, stru.SanitizedPlayer()))
 	if err != nil {
 		log.Default().Printf("QueryRow failed: %v\n", err)
 	}

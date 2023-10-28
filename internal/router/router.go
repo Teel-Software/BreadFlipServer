@@ -45,7 +45,7 @@ func (r *Router) helloHandler() http.HandlerFunc {
 
 func (ro *Router) dbHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		a := ro.Db.Wtf()
+		a := ro.Db.GetRecords()
 		io.WriteString(w, a)
 	}
 }
