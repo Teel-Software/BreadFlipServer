@@ -4,7 +4,7 @@ import "strings"
 
 type ChangePlayerRequest struct {
 	Player string `json:"player"`
-	Val    int    `json:"value"`
+	Val    int    `json:"record"`
 }
 
 func (r *ChangePlayerRequest) SanitizedPlayer() string {

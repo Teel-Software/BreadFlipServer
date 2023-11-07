@@ -72,6 +72,7 @@ func (ro *Router) addPlayerHandler() http.HandlerFunc {
 
 func (ro *Router) changePlayerHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		log.Default().Println("handle change")
 		s := r.Header.Get("size")
 		ken, err := strconv.Atoi(s)
 		if err != nil {

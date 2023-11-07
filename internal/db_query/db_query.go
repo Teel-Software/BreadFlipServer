@@ -96,6 +96,7 @@ func (db *DB) AddPlayer(data []byte) {
 	}
 
 	log.Default().Printf("adding: %v\n", stru)
+	log.Default().Printf("adding: %s\n", fmt.Sprintf("INSERT INTO records (player, record) VALUES ('%s', 0)", stru.SanitizedPlayer()))
 	rows, err := conn.Query(context.Background(), fmt.Sprintf("INSERT INTO records (player, record) VALUES ('%s', 0)", stru.SanitizedPlayer()))
 	if err != nil {
 		log.Default().Printf("QueryRow failed: %v\n", err)
@@ -116,6 +117,7 @@ func (db *DB) ChangeRecordForPlayer(data []byte) {
 		log.Default().Printf("Unable to unmarshall json: %v\n", err)
 	}
 
+	log.Default().Printf("QueryRow failed: %s\n", fmt.Sprintf("UPDATE records SET record = %d WHERE player = '%s'", stru.Val, stru.SanitizedPlayer()))
 	rows, err := conn.Query(context.Background(), fmt.Sprintf("UPDATE records SET record = %d WHERE player = '%s'", stru.Val, stru.SanitizedPlayer()))
 	if err != nil {
 		log.Default().Printf("QueryRow failed: %v\n", err)
