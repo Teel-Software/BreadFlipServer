@@ -3,6 +3,7 @@ package router
 import (
 	"fmt"
 	dbquery "hleb_flip/internal/db_query"
+	"html/template"
 	"io"
 	"log"
 	"net/http"
@@ -33,6 +34,7 @@ func (r *Router) StartRouter() {
 	r.Router.HandleFunc("/add", r.addPlayerHandler())
 	r.Router.HandleFunc("/change", r.changePlayerHandler())
 	r.Router.HandleFunc("/player/{id:[0-9]+}", r.getPlayerHandler())
+	r.Router.HandleFunc("/site", r.siteHandler())
 	http.ListenAndServe(fmt.Sprintf("%s:%s", r.Host, r.Port), r.Router)
 	log.Default().Println("Server started")
 }
@@ -98,5 +100,13 @@ func (ro *Router) getPlayerHandler() http.HandlerFunc {
 		log.Default().Printf("id requested %d\n", id)
 		ans := ro.Db.GetPlayerRecord(id)
 		io.WriteString(w, ans)
+	}
+}
+
+func (ro *Router) siteHandler() http.HandlerFunc {
+	tpl := template.Must(template.ParseFiles("index.html"))
+	return func(w http.ResponseWriter, r *http.Request) {
+		//io.WriteString(w, "<h1>Hello World!</h1>")
+		tpl.Execute(w, nil)
 	}
 }
