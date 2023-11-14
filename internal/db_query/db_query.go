@@ -60,7 +60,7 @@ func (db *DB) GetRecords() string {
 	}
 	defer conn.Close(context.Background())
 
-	rows, err := conn.Query(context.Background(), "SELECT * FROM records ORDER BY record DESC LIMIT 10")
+	rows, err := conn.Query(context.Background(), "SELECT player, record FROM records ORDER BY record DESC LIMIT 10")
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "QueryRow failed: %v\n", err)
 	}
@@ -82,7 +82,7 @@ func (db *DB) GetRecords() string {
 	return string(b)
 }
 
-func (db *DB) AddPlayer(data []byte) {
+func (db *DB) AddPlayer(data []byte) int {
 	conn, err := pgx.ConnectConfig(context.Background(), db.connCfg)
 	if err != nil {
 		log.Default().Printf("Unable to connect to database: %v\n", err)
@@ -96,12 +96,21 @@ func (db *DB) AddPlayer(data []byte) {
 	}
 
 	log.Default().Printf("adding: %v\n", stru)
-	log.Default().Printf("adding: %s\n", fmt.Sprintf("INSERT INTO records (player, record) VALUES ('%s', 0)", stru.SanitizedPlayer()))
-	rows, err := conn.Query(context.Background(), fmt.Sprintf("INSERT INTO records (player, record) VALUES ('%s', 0)", stru.SanitizedPlayer()))
+	log.Default().Printf("adding: %s\n", fmt.Sprintf("VALUES ('%s', 0)", stru.SanitizedPlayer()))
+	rows, err := conn.Query(context.Background(), fmt.Sprintf("INSERT INTO records (player, record) VALUES ('%s', 0) RETURNING id", stru.SanitizedPlayer()))
 	if err != nil {
 		log.Default().Printf("QueryRow failed: %v\n", err)
 	}
 	defer rows.Close()
+
+	var newId int
+	for rows.Next() {
+		err = rows.Scan(&newId)
+		if err != nil {
+			log.Default().Println("failed to retrieve new player id")
+		}
+	}
+	return newId
 }
 
 func (db *DB) ChangeRecordForPlayer(data []byte) {
@@ -117,10 +126,37 @@ func (db *DB) ChangeRecordForPlayer(data []byte) {
 		log.Default().Printf("Unable to unmarshall json: %v\n", err)
 	}
 
-	log.Default().Printf("QueryRow failed: %s\n", fmt.Sprintf("UPDATE records SET record = %d WHERE player = '%s'", stru.Val, stru.SanitizedPlayer()))
-	rows, err := conn.Query(context.Background(), fmt.Sprintf("UPDATE records SET record = %d WHERE player = '%s'", stru.Val, stru.SanitizedPlayer()))
+	log.Default().Printf("QueryRow failed: %s\n", fmt.Sprintf("record = %d WHERE id = %d", stru.Val, stru.Player))
+	rows, err := conn.Query(context.Background(), fmt.Sprintf("UPDATE records SET record = %d WHERE id = %d", stru.Val, stru.Player))
 	if err != nil {
 		log.Default().Printf("QueryRow failed: %v\n", err)
 	}
 	defer rows.Close()
+}
+
+func (db *DB) GetPlayerRecord(id int) string {
+	conn, err := pgx.ConnectConfig(context.Background(), db.connCfg)
+	if err != nil {
+		log.Default().Printf("QueryRow failed: %v\n", err)
+	}
+	defer conn.Close(context.Background())
+
+	log.Default().Printf("SELECT player, record FROM records WHERE id = %d", id)
+	rows, err := conn.Query(context.Background(), fmt.Sprintf("SELECT player, record FROM records WHERE id = %d", id))
+	if err != nil {
+		log.Default().Printf("QueryRow failed: %v\n", err)
+	}
+	defer rows.Close()
+	ans := dbrequests.Record{}
+	for rows.Next() {
+		rows.Scan(&ans.Player, &ans.Val)
+		fmt.Printf("%+v", ans)
+	}
+
+	b, err := json.Marshal(ans)
+	if err != nil {
+		log.Default().Printf("QueryRow failed: %v\n", err)
+	}
+	log.Default().Printf("json: %s", string(b))
+	return string(b)
 }

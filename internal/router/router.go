@@ -32,6 +32,7 @@ func (r *Router) StartRouter() {
 	r.Router.HandleFunc("/db", r.dbHandler())
 	r.Router.HandleFunc("/add", r.addPlayerHandler())
 	r.Router.HandleFunc("/change", r.changePlayerHandler())
+	r.Router.HandleFunc("/player/{id:[0-9]+}", r.getPlayerHandler())
 	http.ListenAndServe(fmt.Sprintf("%s:%s", r.Host, r.Port), r.Router)
 	log.Default().Println("Server started")
 }
@@ -63,10 +64,10 @@ func (ro *Router) addPlayerHandler() http.HandlerFunc {
 			log.Default().Printf("f put request %+v\n", err)
 		}
 
-		ro.Db.AddPlayer(b)
+		id := ro.Db.AddPlayer(b)
 		log.Default().Printf("ok put request %s\n", string(b))
 
-		io.WriteString(w, string(b))
+		io.WriteString(w, strconv.Itoa(id))
 	}
 }
 
@@ -88,5 +89,14 @@ func (ro *Router) changePlayerHandler() http.HandlerFunc {
 		log.Default().Printf("ok put request %s\n", string(b))
 
 		io.WriteString(w, string(b))
+	}
+}
+
+func (ro *Router) getPlayerHandler() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		id, _ := strconv.Atoi(mux.Vars(r)["id"])
+		log.Default().Printf("id requested %d\n", id)
+		ans := ro.Db.GetPlayerRecord(id)
+		io.WriteString(w, ans)
 	}
 }
