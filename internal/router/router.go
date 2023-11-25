@@ -31,6 +31,7 @@ func NewRouter(host, port string) *Router {
 func (r *Router) StartRouter() {
 	r.Router.HandleFunc("/hello", r.helloHandler())
 	r.Router.HandleFunc("/db", r.dbHandler())
+	r.Router.HandleFunc("/getrecords", r.getRecordsHandler())
 	r.Router.HandleFunc("/add", r.addPlayerHandler())
 	r.Router.HandleFunc("/change", r.changePlayerHandler())
 	r.Router.HandleFunc("/player/{id:[0-9]+}", r.getPlayerHandler())
@@ -48,7 +49,24 @@ func (r *Router) helloHandler() http.HandlerFunc {
 
 func (ro *Router) dbHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		a := ro.Db.GetRecords()
+		a := ro.Db.GetTopTenRecords()
+		io.WriteString(w, a)
+	}
+}
+
+func (ro *Router) getRecordsHandler() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		s := r.Header.Get("offset")
+		offset, err := strconv.Atoi(s)
+		if err != nil {
+			log.Default().Printf("cant parse offset %+v\n", err)
+		}
+		s1 := r.Header.Get("count")
+		count, err := strconv.Atoi(s1)
+		if err != nil {
+			log.Default().Printf("cant parse count %+v\n", err)
+		}
+		a := ro.Db.GetRecordsWithPaging(offset, count)
 		io.WriteString(w, a)
 	}
 }
