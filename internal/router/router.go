@@ -1,12 +1,14 @@
 package router
 
 import (
+	"encoding/json"
 	"fmt"
 	dbquery "hleb_flip/internal/db_query"
 	"html/template"
 	"io"
 	"log"
 	"net/http"
+	"os"
 	"strconv"
 
 	"github.com/gorilla/mux"
@@ -67,7 +69,12 @@ func (ro *Router) getRecordsHandler() http.HandlerFunc {
 			log.Default().Printf("cant parse count %+v\n", err)
 		}
 		a := ro.Db.GetRecordsWithPaging(offset, count)
-		io.WriteString(w, a)
+
+		b, err := json.Marshal(a)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "json failed: %v\n", err)
+		}
+		io.WriteString(w, string(b))
 	}
 }
 
@@ -124,7 +131,6 @@ func (ro *Router) getPlayerHandler() http.HandlerFunc {
 func (ro *Router) siteHandler() http.HandlerFunc {
 	tpl := template.Must(template.ParseFiles("index.html"))
 	return func(w http.ResponseWriter, r *http.Request) {
-		//io.WriteString(w, "<h1>Hello World!</h1>")
-		tpl.Execute(w, nil)
+		tpl.Execute(w, ro.Db.GetRecordsWithPaging(0, 100).List)
 	}
 }

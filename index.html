@@ -1,1 +1,21 @@
-<h1>Hello World!</h1>
+<body align="center" style="background-image: url('https://w.forfun.com/fetch/eb/ebba0ec2e6229d8cf437805d8daaaf05.jpeg');">
+<h1>Bread Flip Leaderboard</h1>
+<div style="text-align: center;">
+<table border="1" style="display: inline-block;">
+    <thead>
+        <tr>
+            <th>Player</th>
+            <th>Record</th>
+        </tr>
+    </thead>
+    <tbody>
+        {{range $id, $row := . }}
+            <tr>
+                <td>{{ $row.Player }}</td>
+                <td>{{ $row.Val }}</td>
+            </tr>
+        {{ end }}
+    </tbody>
+</table>
+</div>
+</bodybody>

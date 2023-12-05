@@ -82,7 +82,8 @@ func (db *DB) GetTopTenRecords() string {
 	return string(b)
 }
 
-func (db *DB) GetRecordsWithPaging(offset, count int) string {
+func (db *DB) GetRecordsWithPaging(offset, count int) dbrequests.RecordList {
+	log.Default().Println("Getting from db")
 	conn, err := pgx.ConnectConfig(context.Background(), db.connCfg)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Unable to connect to database: %v\n", err)
@@ -102,14 +103,10 @@ func (db *DB) GetRecordsWithPaging(offset, count int) string {
 		rows.Scan(&ans.Player, &ans.Val)
 		sss.List = append(sss.List, ans)
 		fmt.Printf("%+v", ans)
+		log.Default().Printf("%v\n", ans)
 	}
 
-	b, err := json.Marshal(sss)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "json failed: %v\n", err)
-	}
-
-	return string(b)
+	return sss
 }
 
 func (db *DB) AddPlayer(data []byte) int {
