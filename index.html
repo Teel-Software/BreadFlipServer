@@ -4,6 +4,7 @@
 <table border="1" style="display: inline-block;">
     <thead>
         <tr>
+            <th>Place</th>
             <th>Player</th>
             <th>Record</th>
         </tr>
@@ -11,6 +12,7 @@
     <tbody>
         {{range $id, $row := . }}
             <tr>
+                <td>{{ len (printf "a%*s" $id "") }}</td>
                 <td>{{ $row.Player }}</td>
                 <td>{{ $row.Val }}</td>
             </tr>
