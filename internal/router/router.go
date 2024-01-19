@@ -15,79 +15,81 @@ import (
 )
 
 type Router struct {
-	Router *mux.Router
-	Port   string
-	Host   string
-	Db     *dbquery.DB
+	Router   *mux.Router
+	Port     string
+	Host     string
+	Database *dbquery.DB
 }
 
 func NewRouter(host, port string) *Router {
 	return &Router{
-		Router: mux.NewRouter(),
-		Port:   port,
-		Host:   host,
-		Db:     dbquery.NewDB(),
+		Router:   mux.NewRouter(),
+		Port:     port,
+		Host:     host,
+		Database: dbquery.NewDB(),
 	}
 }
 
-func (r *Router) StartRouter() {
-	r.Router.HandleFunc("/hello", r.helloHandler())
-	r.Router.HandleFunc("/db", r.dbHandler())
-	r.Router.HandleFunc("/getrecords", r.getRecordsHandler())
-	r.Router.HandleFunc("/add", r.addPlayerHandler())
-	r.Router.HandleFunc("/change", r.changePlayerHandler())
-	r.Router.HandleFunc("/player/{id:[0-9]+}", r.getPlayerHandler())
-	r.Router.HandleFunc("/site", r.siteHandler())
-	http.ListenAndServe(fmt.Sprintf("%s:%s", r.Host, r.Port), r.Router)
+func (ro *Router) StartRouter() {
+	ro.Router.HandleFunc("/hello", ro.helloHandler())
+	ro.Router.HandleFunc("/db", ro.dbHandler())
+	ro.Router.HandleFunc("/getrecords", ro.getRecordsHandler())
+	ro.Router.HandleFunc("/add", ro.addPlayerHandler())
+	ro.Router.HandleFunc("/change", ro.changePlayerHandler())
+	ro.Router.HandleFunc("/player/{id:[0-9]+}", ro.getPlayerHandler())
+	ro.Router.HandleFunc("/site", ro.siteHandler())
+	http.ListenAndServe(fmt.Sprintf("%s:%s", ro.Host, ro.Port), ro.Router)
 	log.Default().Println("Server started")
 }
 
-func (r *Router) helloHandler() http.HandlerFunc {
-	log.Default().Println("handling hello")
+func (ro *Router) helloHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		log.Default().Println("handling hello")
 		io.WriteString(w, "hello")
 	}
 }
 
 func (ro *Router) dbHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		a := ro.Db.GetTopTenRecords()
-		io.WriteString(w, a)
+		log.Default().Println("handling top ten")
+		topRecords := ro.Database.GetTopTenRecords()
+		io.WriteString(w, topRecords)
 	}
 }
 
 func (ro *Router) getRecordsHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		s := r.Header.Get("offset")
-		offset, err := strconv.Atoi(s)
+		log.Default().Println("handling get page")
+		offset, err := strconv.Atoi(r.Header.Get("offset"))
 		if err != nil {
 			log.Default().Printf("cant parse offset %+v\n", err)
 		}
-		s1 := r.Header.Get("count")
-		count, err := strconv.Atoi(s1)
+		count, err := strconv.Atoi(r.Header.Get("count"))
 		if err != nil {
 			log.Default().Printf("cant parse count %+v\n", err)
 		}
-		a := ro.Db.GetRecordsWithPaging(offset, count)
 
-		b, err := json.Marshal(a)
+		recordList := ro.Database.GetRecordsWithPaging(offset, count)
+
+		marshalledRecords, err := json.Marshal(recordList)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "json failed: %v\n", err)
 		}
-		io.WriteString(w, string(b))
+		io.WriteString(w, string(marshalledRecords))
 	}
 }
 
 func (ro *Router) addPlayerHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		b := make([]byte, r.ContentLength)
-		_, err := r.Body.Read(b)
+		log.Default().Println("handling add player")
+		newPlayerBytes := make([]byte, r.ContentLength)
+		_, err := r.Body.Read(newPlayerBytes)
 		if err != nil && err != io.EOF {
 			log.Default().Printf("f put request %+v\n", err)
 		}
 
-		id := ro.Db.AddPlayer(b)
-		log.Default().Printf("ok put request %s\n", string(b))
+		id := ro.Database.AddPlayer(newPlayerBytes)
+		log.Default().Printf("ok put request %s\n", string(newPlayerBytes))
 
 		io.WriteString(w, strconv.Itoa(id))
 	}
@@ -95,25 +97,25 @@ func (ro *Router) addPlayerHandler() http.HandlerFunc {
 
 func (ro *Router) changePlayerHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		log.Default().Println("handle change")
-		b := make([]byte, r.ContentLength)
-		_, err := r.Body.Read(b)
+		log.Default().Println("handling change player")
+		reqBody := make([]byte, r.ContentLength)
+		_, err := r.Body.Read(reqBody)
 		if err != nil && err != io.EOF {
-			log.Default().Printf("f put request %+v\n", err)
+			log.Default().Printf("failed change player request %+v\n", err)
+			return
 		}
 
-		ro.Db.ChangeRecordForPlayer(b)
-		log.Default().Printf("ok put request %s\n", string(b))
-
-		io.WriteString(w, string(b))
+		ro.Database.ChangeRecordForPlayer(reqBody)
+		log.Default().Printf("ok change player request %s\n", string(reqBody))
 	}
 }
 
 func (ro *Router) getPlayerHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		log.Default().Println("handling get player")
 		id, _ := strconv.Atoi(mux.Vars(r)["id"])
 		log.Default().Printf("id requested %d\n", id)
-		ans := ro.Db.GetPlayerRecord(id)
+		ans := ro.Database.GetPlayerRecord(id)
 		io.WriteString(w, ans)
 	}
 }
@@ -121,6 +123,7 @@ func (ro *Router) getPlayerHandler() http.HandlerFunc {
 func (ro *Router) siteHandler() http.HandlerFunc {
 	tpl := template.Must(template.ParseFiles("index.html"))
 	return func(w http.ResponseWriter, r *http.Request) {
-		tpl.Execute(w, ro.Db.GetRecordsWithPaging(0, 100).List)
+		log.Default().Println("handling site")
+		tpl.Execute(w, ro.Database.GetRecordsWithPaging(0, 100).List)
 	}
 }
