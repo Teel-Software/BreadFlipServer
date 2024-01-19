@@ -80,13 +80,8 @@ func (ro *Router) getRecordsHandler() http.HandlerFunc {
 
 func (ro *Router) addPlayerHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		s := r.Header.Get("size")
-		ken, err := strconv.Atoi(s)
-		if err != nil {
-			log.Default().Printf("f put request1 %+v\n", err)
-		}
-		b := make([]byte, ken)
-		_, err = r.Body.Read(b)
+		b := make([]byte, r.ContentLength)
+		_, err := r.Body.Read(b)
 		if err != nil && err != io.EOF {
 			log.Default().Printf("f put request %+v\n", err)
 		}
@@ -101,13 +96,8 @@ func (ro *Router) addPlayerHandler() http.HandlerFunc {
 func (ro *Router) changePlayerHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		log.Default().Println("handle change")
-		s := r.Header.Get("size")
-		ken, err := strconv.Atoi(s)
-		if err != nil {
-			log.Default().Printf("f put request1 %+v\n", err)
-		}
-		b := make([]byte, ken)
-		_, err = r.Body.Read(b)
+		b := make([]byte, r.ContentLength)
+		_, err := r.Body.Read(b)
 		if err != nil && err != io.EOF {
 			log.Default().Printf("f put request %+v\n", err)
 		}

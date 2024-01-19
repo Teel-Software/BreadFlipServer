@@ -19,6 +19,7 @@ type ChangePlayerRequest struct {
 
 // Get record list
 type Record struct {
+	Id     int    `json:"id"`
 	Player string `json:"player"`
 	Val    int    `json:"record"`
 }

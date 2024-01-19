@@ -90,7 +90,7 @@ func (db *DB) GetRecordsWithPaging(offset, count int) dbrequests.RecordList {
 	}
 	defer conn.Close(context.Background())
 
-	query := fmt.Sprintf("SELECT player, record FROM records ORDER BY record DESC LIMIT %d OFFSET %d", count, offset)
+	query := fmt.Sprintf("SELECT id, player, record FROM records ORDER BY record DESC LIMIT %d OFFSET %d", count, offset)
 	rows, err := conn.Query(context.Background(), query)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "QueryRow failed: %v\n", err)
@@ -100,7 +100,7 @@ func (db *DB) GetRecordsWithPaging(offset, count int) dbrequests.RecordList {
 	sss := dbrequests.RecordList{List: make([]dbrequests.Record, 0)}
 	for rows.Next() {
 		ans := dbrequests.Record{}
-		rows.Scan(&ans.Player, &ans.Val)
+		rows.Scan(&ans.Id, &ans.Player, &ans.Val)
 		sss.List = append(sss.List, ans)
 		fmt.Printf("%+v", ans)
 		log.Default().Printf("%v\n", ans)
