@@ -1,23 +1,96 @@
-<body align="center" style="background-color:#F5CF8E">
-<h1>Bread Flip Leaderboard</h1>
-<div style="text-align: center;">
-<table border="1" style="display: inline-block; background-color: white;">
-    <thead>
-        <tr>
-            <th>Place</th>
-            <th>Player</th>
-            <th>Record</th>
-        </tr>
-    </thead>
-    <tbody>
+<head>
+  <meta
+    name="viewport"
+    content="viewport-fit=cover, width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no"
+  />
+</head>
+<body class="body">
+  <style>
+    * {
+      margin: 0;
+    }
+    .body {
+      background-color: wheat;
+
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+
+      height: 100vh;
+      height: 100dvh;
+      overflow-y: hidden;
+      padding: 16px;
+    }
+    .header {
+      margin: 0;
+      width: 100%;
+      text-align: center;
+      flex: auto 0 0;
+      color: #6d4735;
+    }
+    .main {
+      width: 100%;
+      flex: auto 0 0;
+    }
+    .table {
+      background: url('https://storage.yandexcloud.net/breadflip/table.png');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+
+      margin: 0 auto;
+      padding: 20px;
+
+      height: 680px;
+      width: 100%;
+      max-width: 400px;
+      overflow-y: hidden;
+
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .row {
+      width: 100%;
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      background-color: #6d4735;
+      color: #eec6a2;
+      border-radius: 10px;
+    }
+    .row > div {
+      align-self: center;
+    }
+    .thead {
+      flex: auto 0 0;
+    }
+    .tbody {
+      flex: auto 0 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+  </style>
+  <h1 class="header">Bread Flip Leaderboard</h1>
+  <main class="main">
+    <div class="table">
+      <!-- <div class="row thead">
+        <h2>Place</h2>
+        <h2>Player</h2>
+        <h2>Record</h2>
+      </div> -->
+      <div class="tbody">
         {{range $id, $row := . }}
-            <tr>
-                <td>{{ len (printf "a%*s" $id "") }}</td>
-                <td>{{ $row.Player }}</td>
-                <td>{{ $row.Val }}</td>
-            </tr>
+        <div class="row">
+          <div>{{ len (printf "a%*s" $id "") }}</div>
+          <div>{{ $row.Player }}</div>
+          <div>{{ $row.Val }}</div>
+        </div>
         {{ end }}
-    </tbody>
-</table>
-</div>
-</bodybody>
+      </div>
+    </div>
+  </main>
+</body>

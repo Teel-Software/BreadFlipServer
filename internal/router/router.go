@@ -121,8 +121,8 @@ func (ro *Router) getPlayerHandler() http.HandlerFunc {
 }
 
 func (ro *Router) siteHandler() http.HandlerFunc {
-	tpl := template.Must(template.ParseFiles("index.html"))
 	return func(w http.ResponseWriter, r *http.Request) {
+		tpl := template.Must(template.ParseFiles("index.html"))
 		log.Default().Println("handling site")
 		tpl.Execute(w, ro.Database.GetRecordsWithPaging(0, 100).List)
 	}
