@@ -44,6 +44,8 @@ func (ro *Router) StartRouter() {
 
 func (ro *Router) helloHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Add("Access-Control-Allow-Origin", "*")
+		w.Header().Add("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept")
 		log.Default().Println("handling hello")
 		io.WriteString(w, "hello")
 	}
@@ -51,6 +53,8 @@ func (ro *Router) helloHandler() http.HandlerFunc {
 
 func (ro *Router) dbHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Add("Access-Control-Allow-Origin", "*")
+		w.Header().Add("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept")
 		log.Default().Println("handling top ten")
 		topRecords := ro.Database.GetTopTenRecords()
 		io.WriteString(w, topRecords)
@@ -59,6 +63,8 @@ func (ro *Router) dbHandler() http.HandlerFunc {
 
 func (ro *Router) getRecordsHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Add("Access-Control-Allow-Origin", "*")
+		w.Header().Add("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept")
 		log.Default().Println("handling get page")
 		offset, err := strconv.Atoi(r.Header.Get("offset"))
 		if err != nil {
@@ -81,6 +87,8 @@ func (ro *Router) getRecordsHandler() http.HandlerFunc {
 
 func (ro *Router) addPlayerHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Add("Access-Control-Allow-Origin", "*")
+		w.Header().Add("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept")
 		log.Default().Println("handling add player")
 		newPlayerBytes := make([]byte, r.ContentLength)
 		_, err := r.Body.Read(newPlayerBytes)
@@ -97,6 +105,8 @@ func (ro *Router) addPlayerHandler() http.HandlerFunc {
 
 func (ro *Router) changePlayerHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Add("Access-Control-Allow-Origin", "*")
+		w.Header().Add("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept")
 		log.Default().Println("handling change player")
 		reqBody := make([]byte, r.ContentLength)
 		_, err := r.Body.Read(reqBody)
@@ -112,6 +122,8 @@ func (ro *Router) changePlayerHandler() http.HandlerFunc {
 
 func (ro *Router) getPlayerHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Add("Access-Control-Allow-Origin", "*")
+		w.Header().Add("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept")
 		log.Default().Println("handling get player")
 		id, _ := strconv.Atoi(mux.Vars(r)["id"])
 		log.Default().Printf("id requested %d\n", id)
@@ -122,6 +134,8 @@ func (ro *Router) getPlayerHandler() http.HandlerFunc {
 
 func (ro *Router) siteHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Add("Access-Control-Allow-Origin", "*")
+		w.Header().Add("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept")
 		tpl := template.Must(template.ParseFiles("index.html"))
 		log.Default().Println("handling site")
 		tpl.Execute(w, ro.Database.GetRecordsWithPaging(0, 100).List)
